@@ -10,6 +10,7 @@ class User(models.Model):
     US = "User"
     MD = "Moderator"
     AD = "Admin"
+    DW = "awd"
     ROLE_CHOICES = (
         (US, "User"),
         (MD, "Moderator"),
