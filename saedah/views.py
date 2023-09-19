@@ -66,12 +66,12 @@ def user_logout(request):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #PROFILE INFO  
-@api_view(['POST'])
+@api_view(['GET','PUT','DELETE'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
-    if request.method == 'POST':
+    user = request.user
+    if request.method == 'GET':
         try:
-            user = request.user
             user_info = {
                 'fullname': user.fullname,
                 'username': user.username
@@ -79,3 +79,13 @@ def user_profile(request):
             return Response(user_info)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+#EDITING PROFILE INFO
+    elif request.method == 'PUT':
+        fullname = request.data.get('fullname')
+        username = request.data.get('username')
+        serializer = SaedahSerializer(user, data={"fullname": fullname, "username": username}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

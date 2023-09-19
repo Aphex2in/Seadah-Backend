@@ -16,3 +16,8 @@ class SaedahSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+    def update(self, instance, validated_data):
+        instance.fullname = validated_data.get('fullname', instance.fullname)
+        instance.username = validated_data.get('username', instance.username)
+        instance.save()
+        return instance
