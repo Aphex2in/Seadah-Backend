@@ -64,3 +64,18 @@ def user_logout(request):
             return Response({'message': 'Successfully logged out.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#PROFILE INFO  
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    if request.method == 'POST':
+        try:
+            user = request.user
+            user_info = {
+                'fullname': user.fullname,
+                'username': user.username
+            }
+            return Response(user_info)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
