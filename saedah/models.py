@@ -52,4 +52,5 @@ class Comments(models.Model):
     id = models.BigAutoField(primary_key=True)
     Deal_id = models.ForeignKey(Deal, on_delete=models.CASCADE)
     posted_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
     content = models.CharField(max_length=366)

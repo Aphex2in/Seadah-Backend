@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DealPhotos, User,Deal
+from .models import Comments, DealPhotos, User,Deal
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,14 +27,27 @@ class DealPhotosSerializer(serializers.ModelSerializer):
         model = DealPhotos
         fields = ['id', 'image']
 
+class CommentSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='posted_by.username')
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comments
+        fields = ['Deal_id', 'posted_by', 'content', 'created_at', 'username', 'avatar']
+
+    def get_avatar(self, obj):
+        avatar_url = obj.posted_by.avatar.url if obj.posted_by.avatar else None
+        return avatar_url
+
 class DealSerializer(serializers.ModelSerializer):
     upvotes = serializers.SerializerMethodField()
     downvotes = serializers.SerializerMethodField()
     photos = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos', 'comments']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -45,6 +58,11 @@ class DealSerializer(serializers.ModelSerializer):
     def get_photos(self, obj):
         photos = DealPhotos.objects.filter(deal=obj)
         return [photo.photo.url for photo in photos]
+    
+    def get_comments(self, obj):
+        comments = Comments.objects.filter(Deal_id=obj.id)
+        comment_serializer = CommentSerializer(comments, many=True)
+        return {'comments': comment_serializer.data}
     
 class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:

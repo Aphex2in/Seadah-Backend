@@ -1,8 +1,8 @@
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from .models import DealPhotos, User, Deal, Follower
+from .models import Comments, DealPhotos, User, Deal, Follower
 from django.contrib.auth import authenticate
-from .serializers import UserCustomSerializer, UserSerializer, DealSerializer
+from .serializers import CommentSerializer, UserCustomSerializer, UserSerializer, DealSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -64,11 +64,11 @@ def deals_list(request):
         return JsonResponse({'deals':serializer.data})
     if request.method == 'POST':
         user = request.user
-        data = request.data
+        data = request.data.copy()
         data['posted_by'] = user.id
 
         # Get the list of uploaded images from the request
-        images = request.FILES.getlist('images')
+        photos = request.FILES.getlist('photos')
 
         # Create a new deal instance
         serializer = DealSerializer(data=data)
@@ -78,8 +78,8 @@ def deals_list(request):
             deal = serializer.save()
 
             # Loop through the list of images and create DealPhotos objects
-            for image in images:
-                deal_photo = DealPhotos(deal=deal, photo=image)
+            for photo in photos:
+                deal_photo = DealPhotos(deal=deal, photo=photo)
                 deal_photo.save()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -241,3 +241,37 @@ def downvote_deal(request, id):
     deal.save()
 
     return Response({'message': 'Downvoted successfully'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def comment_on_deal(request, id):
+    try:
+        deal = Deal.objects.get(id=id)
+    except Deal.DoesNotExist:
+        return Response({'error': 'Deal not found'}, status=404)
+
+    user = request.user
+    content = request.data.get('content', None)
+
+    if not content:
+        return Response({'error': 'Comment content is required'}, status=400)
+
+    comment_data = {
+        'Deal_id': deal.id,
+        'posted_by': user.id,
+        'content': content,
+    }
+
+    serializer = CommentSerializer(data=comment_data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+    return Response(serializer.errors, status=400)
+
+@api_view(['GET'])
+def show_user_comments(request, id):
+    comments = Comments.objects.filter(posted_by=id)
+    serializer = CommentSerializer(comments, many=True)
+    return Response({'comments': serializer.data})

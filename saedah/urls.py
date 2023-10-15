@@ -35,5 +35,7 @@ urlpatterns = [
     path('profile/<int:id>/follow/', views.follow_or_unfollow_profile, name='follow_or_unfollow_profile'),
     path('profile/<int:id>/followers/', views.user_followers, name='user_followers'),
     path('profile/<int:id>/followings/', views.user_followings, name='user_followings'),
-    path('profile/uploadimage/', views.upload_user_image, name='upload_user_image')
+    path('profile/uploadimage/', views.upload_user_image, name='upload_user_image'),
+    path('deal/<int:id>/comment/', views.comment_on_deal, name='comment_on_deal'),
+    path('profile/<int:id>/show_comments/', views.show_user_comments, name='show_user_comments')
 ]
