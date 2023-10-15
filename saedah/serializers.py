@@ -42,3 +42,17 @@ class DealSerializer(serializers.ModelSerializer):
             if longitude is not None:
                 instance.longitude = longitude
         return instance
+    
+class UserCustomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['fullname', 'username', 'role', 'followers', 'followings']
+
+    followers = serializers.SerializerMethodField()
+    followings = serializers.SerializerMethodField()
+
+    def get_followers(self, obj):
+        return obj.followers.count()
+
+    def get_followings(self, obj):
+        return obj.following.count()
