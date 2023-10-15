@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import User, Deal, Follower
 from django.contrib.auth import authenticate
@@ -104,30 +104,26 @@ def user_logout(request):
 @api_view(['GET','PUT','DELETE'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
-    user = request.user
+    try:
+        user = User.objects.get(pk=request.user.id)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
-        try:
-            user_info = {
-                'fullname': user.fullname,
-                'username': user.username,
-                'role': user.role
-            }
-            return Response(user_info)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        serializer = UserCustomSerializer(user)
+        return JsonResponse({'user':serializer.data})
         
 #EDITING PROFILE INFO
     elif request.method == 'PUT':
         fullname = request.data.get('fullname')
         username = request.data.get('username')
-        serializer = UserSerializer(user, data={"fullname": fullname, "username": username}, partial=True)
+        serializer = UserCustomSerializer(user, data={"fullname": fullname, "username": username}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
-@api_view(['GET','POST'])
+#Profile Details for a specified user
+@api_view(['GET'])
 def profile_detail(request, id):
     try:
         user = User.objects.get(pk=id)
@@ -137,12 +133,8 @@ def profile_detail(request, id):
         serializer = UserCustomSerializer(user)
         return JsonResponse({'user':serializer.data})
     
-    #if request.method == 'POST':
-        #serializer = UserSerializer(data=request.data)
-        #if serializer.is_valid():
-            #serializer.save()
-            #return Response(serializer.data, status=status.HTTP_201_CREATED)
-#A user profile deals
+
+#A user profile deals for a specified user
 @api_view(['GET'])
 def profile_deals(request, id):
 
@@ -192,3 +184,46 @@ def user_followers(request, id):
     following_users = [follower.following for follower in followings]
     serializer = UserCustomSerializer(following_users, many=True)
     return Response({'followers': serializer.data})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_user_image(request):
+    current_user = request.user
+    image = request.data.get('image')  # Assuming the image is sent as a file in the request data
+
+    if not image:
+        return Response({'error': 'Image file not provided'}, status=400)
+
+    current_user.avatar = image
+    current_user.save()
+
+    serializer = UserCustomSerializer(current_user)
+    return Response({'user': serializer.data})
+#Upvotes and Downvotes
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upvote_deal(request, id):
+    deal = get_object_or_404(Deal, id=id)
+    user = request.user
+
+    if user in deal.upvotes.all():
+        return Response({'error': 'You have already upvoted this deal.'}, status=400)
+
+    deal.upvotes.add(user)
+    deal.save()
+
+    return Response({'message': 'Upvoted successfully'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def downvote_deal(request, id):
+    deal = get_object_or_404(Deal, id=id)
+    user = request.user
+
+    if user in deal.downvotes.all():
+        return Response({'error': 'You have already downvoted this deal.'}, status=400)
+
+    deal.downvotes.add(user)
+    deal.save()
+
+    return Response({'message': 'Downvoted successfully'})

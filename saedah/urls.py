@@ -24,13 +24,16 @@ urlpatterns = [
     path('users/', views.user_list),
     path('deals/', views.deals_list),
     path('deal/<int:id>', views.deal_detail),
+    path('deal/<int:id>/upvote/', views.upvote_deal, name='upvote_deal'),
+    path('deal/<int:id>/downvote/', views.downvote_deal, name='downvote_deal'),
     path('register/', register_user, name='register'),
     path('login/', user_login, name='login'),
     path('logout/', user_logout, name='logout'),
     path('profile/', user_profile, name='profile'),
     path('profile/<int:id>', views.profile_detail),
-    path('profile/<int:id>/deals', views.profile_deals),
+    path('profile/<int:id>/deals/', views.profile_deals),
     path('profile/<int:id>/follow/', views.follow_or_unfollow_profile, name='follow_or_unfollow_profile'),
     path('profile/<int:id>/followers/', views.user_followers, name='user_followers'),
-    path('profile/<int:id>/followings/', views.user_followings, name='user_followings')
+    path('profile/<int:id>/followings/', views.user_followings, name='user_followings'),
+    path('profile/uploadimage/', views.upload_user_image, name='upload_user_image')
 ]

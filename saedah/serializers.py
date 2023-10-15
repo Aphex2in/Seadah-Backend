@@ -25,28 +25,12 @@ class UserSerializer(serializers.ModelSerializer):
 class DealSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deal
-        fields = ['id','posted_by','location','title','description','expiry_date','tags','upvotes','downvotes','price','voucher','latitude','longitude']
-    location = serializers.SerializerMethodField()
-
-    def get_location(self, obj):
-        return {"latitude": obj.latitude, "longitude": obj.longitude}
-
-    def set_location(self, validated_data, instance):
-        # Extract the 'location' data from the POST request and set it in 'latitude' and 'longitude' fields.
-        location_data = validated_data.get('location')
-        if location_data:
-            latitude = location_data.get('latitude')
-            longitude = location_data.get('longitude')
-            if latitude is not None:
-                instance.latitude = latitude
-            if longitude is not None:
-                instance.longitude = longitude
-        return instance
+        fields = ['id','posted_by','title','description','expiry_date','tags','upvotes','downvotes','price','voucher','latitude','longitude']
     
 class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['fullname', 'username', 'role', 'followers', 'followings']
+        fields = ['fullname', 'username', 'role', 'followers', 'followings', 'avatar']
 
     followers = serializers.SerializerMethodField()
     followings = serializers.SerializerMethodField()
