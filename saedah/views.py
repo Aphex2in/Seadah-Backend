@@ -1,6 +1,6 @@
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from .models import User, Deal, Follower
+from .models import DealPhotos, User, Deal, Follower
 from django.contrib.auth import authenticate
 from .serializers import UserCustomSerializer, UserSerializer, DealSerializer
 from rest_framework.decorators import api_view, permission_classes
@@ -63,12 +63,25 @@ def deals_list(request):
         serializer = DealSerializer(deal, many=True)
         return JsonResponse({'deals':serializer.data})
     if request.method == 'POST':
-        user_id = request.user.id # Get the user's ID from the request data.
-        request.data['posted_by'] = user_id  # Assign the user's ID to the 'posted_by' field.
-        serializer = DealSerializer(data=request.data)
+        user = request.user
+        data = request.data
+        data['posted_by'] = user.id
+
+        # Get the list of uploaded images from the request
+        images = request.FILES.getlist('images')
+
+        # Create a new deal instance
+        serializer = DealSerializer(data=data)
 
         if serializer.is_valid():
-            serializer.save()
+            # Save the deal object with the user as the creator
+            deal = serializer.save()
+
+            # Loop through the list of images and create DealPhotos objects
+            for image in images:
+                deal_photo = DealPhotos(deal=deal, photo=image)
+                deal_photo.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -199,6 +212,7 @@ def upload_user_image(request):
 
     serializer = UserCustomSerializer(current_user)
     return Response({'user': serializer.data})
+
 #Upvotes and Downvotes
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User,Deal
+from .models import DealPhotos, User,Deal
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,10 +22,29 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
+class DealPhotosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DealPhotos
+        fields = ['id', 'image']
+
 class DealSerializer(serializers.ModelSerializer):
+    upvotes = serializers.SerializerMethodField()
+    downvotes = serializers.SerializerMethodField()
+    photos = serializers.SerializerMethodField()
+
     class Meta:
         model = Deal
-        fields = ['id','posted_by','title','description','expiry_date','tags','upvotes','downvotes','price','voucher','latitude','longitude']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos']
+
+    def get_upvotes(self, obj):
+        return obj.upvotes.count()
+
+    def get_downvotes(self, obj):
+        return obj.downvotes.count()
+
+    def get_photos(self, obj):
+        photos = DealPhotos.objects.filter(deal=obj)
+        return [photo.photo.url for photo in photos]
     
 class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
