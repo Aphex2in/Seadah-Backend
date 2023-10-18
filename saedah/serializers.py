@@ -47,7 +47,7 @@ class DealSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos', 'comments']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos', 'comments']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -64,10 +64,22 @@ class DealSerializer(serializers.ModelSerializer):
         comment_serializer = CommentSerializer(comments, many=True)
         return {'comments': comment_serializer.data}
     
+class LikeSerializer(serializers.ModelSerializer):
+    photos = serializers.SerializerMethodField()
+    class Meta:
+        model = Deal
+        fields = ['id', 'posted_by', 'title', 'description' ,'photos']
+
+    def get_photos(self, obj):
+        photos = DealPhotos.objects.filter(deal=obj)
+        return [photo.photo.url for photo in photos]
+
 class UserCustomSerializer(serializers.ModelSerializer):
+    comments = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['fullname', 'username', 'role', 'followers', 'followings', 'avatar']
+        fields = ['fullname', 'username', 'role', 'followers', 'followings', 'avatar', 'comments', 'likes']
 
     followers = serializers.SerializerMethodField()
     followings = serializers.SerializerMethodField()
@@ -77,3 +89,13 @@ class UserCustomSerializer(serializers.ModelSerializer):
 
     def get_followings(self, obj):
         return obj.following.count()
+    
+    def get_comments(self, obj):
+        comments = Comments.objects.filter(posted_by=obj)
+        comment_serializer = CommentSerializer(comments, many=True)
+        return {'comments': comment_serializer.data}
+    
+    def get_likes(self, obj):
+        likes = Deal.objects.filter(likes=obj)
+        like_serializer = LikeSerializer(likes, many=True)
+        return {'likes': like_serializer.data}

@@ -26,6 +26,7 @@ urlpatterns = [
     path('deal/<int:id>', views.deal_detail),
     path('deal/<int:id>/upvote/', views.upvote_deal, name='upvote_deal'),
     path('deal/<int:id>/downvote/', views.downvote_deal, name='downvote_deal'),
+    path('deal/<int:id>/like/', views.like_deal, name='like_deal'),
     path('register/', register_user, name='register'),
     path('login/', user_login, name='login'),
     path('logout/', user_logout, name='logout'),

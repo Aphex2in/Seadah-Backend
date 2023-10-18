@@ -37,6 +37,8 @@ class Deal(models.Model):
     tags = models.CharField(max_length=20)
     upvotes = models.ManyToManyField(User, related_name='upvoted_deals', blank=True)
     downvotes = models.ManyToManyField(User, related_name='downvoted_deals', blank=True)
+    likes = models.ManyToManyField(User, related_name='likes', blank=True)
+    isLiked = models.BooleanField(default=False)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     voucher = models.CharField(max_length=100)
 

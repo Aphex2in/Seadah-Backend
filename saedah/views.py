@@ -87,20 +87,18 @@ def deals_list(request):
     
 
 @api_view(['GET','POST'])
+@permission_classes([IsAuthenticated])
 def deal_detail(request, id):
+    user = request.user
     try:
         deal = Deal.objects.get(pk=id)
     except Deal.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
         serializer = DealSerializer(deal)
+        if user in deal.likes.all():
+            deal.isLiked = True
         return JsonResponse({'deal':serializer.data})
-    
-    #if request.method == 'POST':
-        #serializer = UserSerializer(data=request.data)
-        #if serializer.is_valid():
-            #serializer.save()
-            #return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -241,6 +239,21 @@ def downvote_deal(request, id):
     deal.save()
 
     return Response({'message': 'Downvoted successfully'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def like_deal(request, id):
+    deal = get_object_or_404(Deal, id=id)
+    user = request.user
+
+    if user in deal.likes.all():
+        deal.likes.remove(user)
+        return Response({'message': 'Unliked successfully.'})
+
+    deal.likes.add(user)
+    deal.save()
+
+    return Response({'message': 'Liked successfully'})
 
 
 @api_view(['POST'])
