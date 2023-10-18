@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+STATIC_ROOT = "static"
+
 AUTH_USER_MODEL = 'saedah.User'
 
 REST_FRAMEWORK = {
