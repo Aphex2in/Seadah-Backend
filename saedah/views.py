@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authtoken.models import Token
+from django.db.models import Q
 
 
 @api_view(['POST'])
@@ -331,3 +332,38 @@ def show_user_comments(request, id):
     comments = Comments.objects.filter(posted_by=id)
     serializer = CommentSerializer(comments, many=True)
     return Response({'comments': serializer.data})
+
+@api_view(['GET'])
+def search_deals(request):
+    keyword = request.GET.get('q', '')
+
+    if keyword:
+        deals = Deal.objects.filter(
+            Q(title__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__icontains=keyword)
+        )
+    else:
+        deals = Deal.objects.all()
+
+    serializer = DealSerializer(deals, many=True)
+    return Response({'deals': serializer.data})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def home_deals(request):
+    user = request.user  # Get the logged-in user
+    followings = user.following.all()
+
+    if followings:
+        # Get deals from users you are following
+        deals = Deal.objects.filter(posted_by__in=followings)
+    else:
+        # If no followings or no deals from followings, show the latest deals
+        latest_deals = Deal.objects.order_by('-id')[:10]
+
+    if not followings or not deals:
+        # If no followings or no deals from followings, show the latest deals
+        serializer = DealSerializer(latest_deals, many=True)
+        return Response({'latest': serializer.data})
+
+    serializer = DealSerializer(deals, many=True)
+    return Response({'deals': serializer.data})

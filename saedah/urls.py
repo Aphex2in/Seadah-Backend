@@ -21,12 +21,14 @@ from .views import register_user, user_login, user_logout, user_profile
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('home/', views.home_deals, name='home_deals'),
     path('users/', views.user_list),
     path('deals/', views.deals_list),
     path('deal/<int:id>', views.deal_detail),
     path('deal/<int:id>/upvote/', views.upvote_deal, name='upvote_deal'),
     path('deal/<int:id>/downvote/', views.downvote_deal, name='downvote_deal'),
     path('deal/<int:id>/like/', views.like_deal, name='like_deal'),
+    path('search/', views.search_deals, name='search_deals'),
     path('register/', register_user, name='register'),
     path('login/', user_login, name='login'),
     path('logout/', user_logout, name='logout'),

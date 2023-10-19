@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 
-from saedah.serializers import UserSerializer
+from saedah.serializers import UserCustomSerializer, UserSerializer
 from .models import Comments, DealPhotos, User, Deal
 
 class CustomUserAddForm(forms.ModelForm):
@@ -19,30 +19,29 @@ class CustomUserAddForm(forms.ModelForm):
                 user.save()
             return user
         return None  # Return None if the serializer is not valid
-
+    
 class CustomUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['fullname', 'username', 'password', 'email', 'role', 'avatar']
+        fields = ['fullname', 'username', 'email', 'role', 'avatar']
+
+    def __init__(self, *args, **kwargs):
+        super(CustomUserChangeForm, self).__init__(*args, **kwargs)
+
+        # Limit the choices for the 'role' field to 'User' and 'Admin'
+        self.fields['role'].choices = [('User', 'User'), ('Moderator', 'Moderator')]
 
 class CustomDealsCreationForm(forms.ModelForm):
     class Meta:
         model = Deal
         fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'voucher', 'latitude', 'longitude']
 
-class CustomDealsChangeForm(forms.ModelForm):
-    class Meta:
-        model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'voucher', 'latitude', 'longitude']
-
-
 class DealPhotosInline(admin.TabularInline):
     model = DealPhotos
     extra = 3  # Set the number of empty photo slots for each deal
 
 class DealsAdmin(admin.ModelAdmin):
-    add_form = CustomDealsCreationForm
-    form = CustomDealsChangeForm
+    form = CustomDealsCreationForm
     inlines = [DealPhotosInline]  # Add the inline for DealPhotos
     
     list_display = ('id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'voucher', 'latitude', 'longitude')
@@ -51,13 +50,21 @@ class DealsAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
 class UserAdmin(admin.ModelAdmin):
-    form = CustomUserAddForm
+    # Use the CustomUserAddForm for adding users
+    add_form = CustomUserAddForm
 
     list_display = ('username', 'email', 'role', 'fullname', 'avatar')
-    search_fields = ('id','username', 'email', 'fullname')
+    search_fields = ('id', 'username', 'email', 'fullname')
     list_filter = ('role',)
     ordering = ('-date_joined',)
-    
+
+    def add_view(self, request, form_url='', extra_context=None):
+        self.form = CustomUserAddForm
+        return super(UserAdmin, self).add_view(request, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        self.form = CustomUserChangeForm
+        return super(UserAdmin, self).change_view(request, object_id, form_url, extra_context)
     
 
 class CommentsAdmin(admin.ModelAdmin):
