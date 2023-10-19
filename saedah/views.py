@@ -1,6 +1,6 @@
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from .models import Comments, DealPhotos, User, Deal, Follower
+from .models import Comments, DealPhotos, User, Deal
 from django.contrib.auth import authenticate
 from .serializers import CommentSerializer, UserCustomSerializer, UserSerializer, DealSerializer
 from rest_framework.decorators import api_view, permission_classes
@@ -86,7 +86,7 @@ def deals_list(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(['GET','POST'])
+@api_view(['GET', 'PUT', 'DELETE'])  # Added PUT and DELETE methods
 @permission_classes([IsAuthenticated])
 def deal_detail(request, id):
     user = request.user
@@ -94,11 +94,30 @@ def deal_detail(request, id):
         deal = Deal.objects.get(pk=id)
     except Deal.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Check if the user has permission to modify the deal (PUT/DELETE)
+    if request.method in ['PUT', 'DELETE']:
+        if user != deal.posted_by and user.role != User.MD:
+            return Response({'message': 'You are not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
     if request.method == 'GET':
         serializer = DealSerializer(deal)
         if user in deal.likes.all():
             deal.isLiked = True
-        return JsonResponse({'deal':serializer.data})
+        return Response({'deal': serializer.data})
+
+    if request.method == 'PUT':
+        # Assuming you have a DealSerializer for updating the deal details
+        serializer = DealSerializer(deal, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Deal details updated successfully'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'DELETE':
+        deal.delete()
+        return Response({'message': 'Deal deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
     
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -164,37 +183,32 @@ def follow_or_unfollow_profile(request, id):
     current_user = request.user
 
     if target_user == current_user:
-        return JsonResponse({'detail': 'You cannot follow or unfollow yourself.'}, status=400)
+        return Response({'detail': 'You cannot follow or unfollow yourself.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        follower_relation = Follower.objects.get(followedby=target_user, following=current_user)
-    except Follower.DoesNotExist:
-        follower_relation = None
-
-    if follower_relation:
-        follower_relation.delete()
+    if current_user in target_user.followers.all():
+        target_user.followers.remove(current_user)
         action = 'unfollowed'
     else:
-        Follower.objects.create(followedby=target_user, following=current_user)
+        target_user.followers.add(current_user)
         action = 'followed'
 
-    return JsonResponse({'detail': f'You have {action} {target_user.fullname}'})
+    return Response({'detail': f'You have {action} {target_user.fullname}'}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def user_followings(request, id):
     target_user = get_object_or_404(User, id=id)
-    followers = Follower.objects.filter(following=target_user)
-    follower_users = [follower.followedby for follower in followers]
+    follower_users = target_user.following.all()
     serializer = UserCustomSerializer(follower_users, many=True)
-    return Response({'followings': serializer.data})
+    return Response({'followings': serializer.data}, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def user_followers(request, id):
     target_user = get_object_or_404(User, id=id)
-    followings = Follower.objects.filter(followedby=target_user)
-    following_users = [follower.following for follower in followings]
+    following_users = target_user.followers.all()
     serializer = UserCustomSerializer(following_users, many=True)
-    return Response({'followers': serializer.data})
+    return Response({'followers': serializer.data}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -275,13 +289,42 @@ def comment_on_deal(request, id):
         'posted_by': user.id,
         'content': content,
     }
-
     serializer = CommentSerializer(data=comment_data)
 
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
+@api_view(['GET','PUT', 'DELETE'])  # Adding PUT and DELETE methods
+@permission_classes([IsAuthenticated])
+def comment_removeoredit(request, id):
+    user = request.user
+    try:
+        comment = Comments.objects.get(pk=id)
+    except Comments.DoesNotExist:
+        return Response({'message': 'This comment does not exist.'},status=status.HTTP_404_NOT_FOUND)
+
+    # Check if the user has permission to modify the comment (PUT/DELETE)
+    if request.method in ['PUT', 'DELETE']:
+        if user != comment.posted_by and user.role != User.MD:
+            return Response({'message': 'You are not authorized.'},status=status.HTTP_403_FORBIDDEN)
+    
+    if request.method == 'GET':
+        comments = Comments.objects.filter(id=id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response({'comments': serializer.data})
+    
+    if request.method == 'PUT':
+        serializer = CommentSerializer(comment, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Comment updated successfully'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'DELETE':
+        comment.delete()
+        return Response({'message': 'Comment deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
 def show_user_comments(request, id):

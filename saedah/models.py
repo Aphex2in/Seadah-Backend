@@ -18,17 +18,14 @@ class User(AbstractUser):
         (AD, "Admin")
     )
     role = models.CharField(max_length=10,choices=ROLE_CHOICES,default=US)
-
+    followers = models.ManyToManyField('self', symmetrical=False, related_name='following', blank=True)
+    
     def __str__(self):
         return str(self.id)
-    
-class Follower(models.Model):
-    followedby = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
-    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
 
 class Deal(models.Model):
     id = models.BigAutoField(primary_key=True)
-    posted_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    posted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deals')
     title = models.CharField(max_length=124)
     description = models.CharField(max_length=2000)  # You can adjust the max_length as needed.
     latitude = models.FloatField()
@@ -52,7 +49,7 @@ class DealPhotos(models.Model):
 
 class Comments(models.Model):
     id = models.BigAutoField(primary_key=True)
-    Deal_id = models.ForeignKey(Deal, on_delete=models.CASCADE)
-    posted_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    Deal_id = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='comments')
+    posted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.CharField(max_length=366)

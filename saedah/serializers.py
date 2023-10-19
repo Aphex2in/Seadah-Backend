@@ -8,14 +8,21 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
+        role = validated_data.get('role', User.US)
+
         user = User(
             fullname=validated_data['fullname'],
             username=validated_data['username'],
-            email=validated_data['email']
+            email=validated_data['email'],
+            role=role
         )
+        if role == User.AD:
+            user.is_staff = True
+            user.is_superuser = True
         user.set_password(validated_data['password'])
         user.save()
         return user
+    
     def update(self, instance, validated_data):
         instance.fullname = validated_data.get('fullname', instance.fullname)
         instance.username = validated_data.get('username', instance.username)
