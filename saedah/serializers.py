@@ -50,11 +50,11 @@ class DealSerializer(serializers.ModelSerializer):
     upvotes = serializers.SerializerMethodField()
     downvotes = serializers.SerializerMethodField()
     photos = serializers.SerializerMethodField()
-    comments = serializers.SerializerMethodField()
+    #comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos', 'comments']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'voucher', 'latitude', 'longitude', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -66,10 +66,10 @@ class DealSerializer(serializers.ModelSerializer):
         photos = DealPhotos.objects.filter(deal=obj)
         return [photo.photo.url for photo in photos]
     
-    def get_comments(self, obj):
-        comments = Comments.objects.filter(Deal_id=obj.id)
-        comment_serializer = CommentSerializer(comments, many=True)
-        return {'comments': comment_serializer.data}
+    #def get_comments(self, obj):
+        #comments = Comments.objects.filter(Deal_id=obj.id)
+        #comment_serializer = CommentSerializer(comments, many=True)
+        #return {'comments': comment_serializer.data}
     
 class LikeSerializer(serializers.ModelSerializer):
     photos = serializers.SerializerMethodField()

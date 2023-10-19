@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authtoken.models import Token
 from django.db.models import Q
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 @api_view(['POST'])
@@ -102,10 +103,35 @@ def deal_detail(request, id):
             return Response({'message': 'You are not authorized'}, status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'GET':
-        serializer = DealSerializer(deal)
+        # Pagination settings
+        page = request.GET.get('page', 1)
+        comments_per_page = 5
+
+        # Get all comments for the deal
+        comments = Comments.objects.filter(Deal_id=deal.id).order_by('created_at')
+
+        paginator = Paginator(comments, comments_per_page)
+
+        try:
+            comments_page = paginator.page(page)
+        except PageNotAnInteger:
+            comments_page = paginator.page(1)
+        except EmptyPage:
+            comments_page = paginator.page(paginator.num_pages)
+
+        # Serialize the comments for the current page
+        serializer = CommentSerializer(comments_page, many=True)
+
         if user in deal.likes.all():
             deal.isLiked = True
-        return Response({'deal': serializer.data})
+
+        return Response({
+            'deal': DealSerializer(deal).data,
+            'comments': serializer.data,
+            'total_comments': comments.count(),
+            'has_next_page': comments_page.has_next(),
+            'has_previous_page': comments_page.has_previous(),
+        })
 
     if request.method == 'PUT':
         # Assuming you have a DealSerializer for updating the deal details
@@ -336,6 +362,8 @@ def show_user_comments(request, id):
 @api_view(['GET'])
 def search_deals(request):
     keyword = request.GET.get('q', '')
+    page = request.GET.get('page', 1)
+    deals_per_page = 5
 
     if keyword:
         deals = Deal.objects.filter(
@@ -344,26 +372,58 @@ def search_deals(request):
     else:
         deals = Deal.objects.all()
 
-    serializer = DealSerializer(deals, many=True)
-    return Response({'deals': serializer.data})
+    paginator = Paginator(deals, deals_per_page)
+
+    try:
+        deals_page = paginator.page(page)
+    except PageNotAnInteger:
+        deals_page = paginator.page(1)
+    except EmptyPage:
+        deals_page = paginator.page(paginator.num_pages)
+
+    # Serialize the deals for the current page
+    serializer = DealSerializer(deals_page, many=True)
+
+    return Response({
+        'deals': serializer.data,
+        'total_deals': deals.count(),
+        'has_next_page': deals_page.has_next(),
+        'has_previous_page': deals_page.has_previous(),
+    })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def home_deals(request):
     user = request.user  # Get the logged-in user
     followings = user.following.all()
+    page = request.GET.get('page', 1)
+    deals_per_page = 5
 
     if followings:
         # Get deals from users you are following
         deals = Deal.objects.filter(posted_by__in=followings)
     else:
         # If no followings or no deals from followings, show the latest deals
-        latest_deals = Deal.objects.order_by('-id')[:10]
+        latest_deals = Deal.objects.order_by('-id')
 
     if not followings or not deals:
         # If no followings or no deals from followings, show the latest deals
-        serializer = DealSerializer(latest_deals, many=True)
-        return Response({'latest': serializer.data})
+        paginator = Paginator(latest_deals, deals_per_page)
+    else:
+        paginator = Paginator(deals, deals_per_page)
 
-    serializer = DealSerializer(deals, many=True)
-    return Response({'deals': serializer.data})
+    try:
+        deals_page = paginator.page(page)
+    except PageNotAnInteger:
+        deals_page = paginator.page(1)
+    except EmptyPage:
+        deals_page = paginator.page(paginator.num_pages)
+
+    serializer = DealSerializer(deals_page, many=True)
+
+    return Response({
+        'deals': serializer.data,
+        'total_deals': paginator.count,
+        'has_next_page': deals_page.has_next(),
+        'has_previous_page': deals_page.has_previous(),
+    })
