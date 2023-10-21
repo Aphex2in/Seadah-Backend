@@ -30,7 +30,7 @@ class CustomUserChangeForm(forms.ModelForm):
 
         # Limit the choices for the 'role' field to 'User' and 'Admin'
         self.fields['role'].choices = [('User', 'User'), ('Moderator', 'Moderator')]
-d
+
 class CustomDealsCreationForm(forms.ModelForm):
     class Meta:
         model = Deal
