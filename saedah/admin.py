@@ -8,7 +8,7 @@ from .models import Comments, DealPhotos, User, Deal
 class CustomUserAddForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['fullname', 'username', 'password', 'email', 'role', 'avatar']
+        fields = ['fullname', 'username', 'password', 'email', 'role']
 
     def save(self, commit=True):
         user = super().save(commit=False)
