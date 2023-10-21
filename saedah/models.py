@@ -37,7 +37,7 @@ class Deal(models.Model):
     likes = models.ManyToManyField(User, related_name='likes', blank=True)
     isLiked = models.BooleanField(default=False)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    voucher = models.CharField(max_length=100)
+
 
 class DealPhotos(models.Model):
     deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='photos')

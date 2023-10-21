@@ -34,7 +34,7 @@ class CustomUserChangeForm(forms.ModelForm):
 class CustomDealsCreationForm(forms.ModelForm):
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'voucher', 'latitude', 'longitude']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'latitude', 'longitude']
 
 class DealPhotosInline(admin.TabularInline):
     model = DealPhotos
@@ -44,7 +44,7 @@ class DealsAdmin(admin.ModelAdmin):
     form = CustomDealsCreationForm
     inlines = [DealPhotosInline]  # Add the inline for DealPhotos
     
-    list_display = ('id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'voucher', 'latitude', 'longitude')
+    list_display = ('id', 'posted_by', 'title', 'description', 'expiry_date', 'tags', 'price', 'latitude', 'longitude')
     search_fields = ('id',)
     list_filter = ('id',)
     ordering = ('id',)
