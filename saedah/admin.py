@@ -35,7 +35,7 @@ class CustomDealsCreationForm(forms.ModelForm):
     class Meta:
         model = Deal
         fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'price', 'latitude', 'longitude', 'link']
-
+d
 class DealPhotosInline(admin.TabularInline):
     model = DealPhotos
     extra = 3  # Set the number of empty photo slots for each deal
