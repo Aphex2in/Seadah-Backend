@@ -29,11 +29,16 @@ ALLOWED_HOSTS = ['127.0.0.1', 'saedah.pythonanywhere.com']
 
 
 # Application definition
+GRAPH_MODELS ={
+'all_applications': True,
+'graph_models': True,
+}
 
 INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework',
     'saedah',
+    'django_extensions',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -362,7 +362,7 @@ def search_deals(request):
 
     if keyword:
         deals = Deal.objects.filter(
-            Q(title__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__icontains=keyword)
+            Q(title__icontains=keyword) | Q(description__icontains=keyword)
         )
     else:
         deals = Deal.objects.all()
