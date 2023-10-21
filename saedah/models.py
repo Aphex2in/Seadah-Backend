@@ -31,7 +31,7 @@ class Deal(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     expiry_date = models.DateField()
-    tags = models.CharField(max_length=20)
+    tags = models.CharField(max_length=20, blank=True)
     upvotes = models.ManyToManyField(User, related_name='upvoted_deals', blank=True)
     downvotes = models.ManyToManyField(User, related_name='downvoted_deals', blank=True)
     likes = models.ManyToManyField(User, related_name='likes', blank=True)
