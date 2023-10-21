@@ -236,10 +236,10 @@ def user_followers(request, id):
 @permission_classes([IsAuthenticated])
 def upload_user_image(request):
     current_user = request.user
-    image = request.data.get('image')  # Assuming the image is sent as a file in the request data
+    image = request.data.get('avatar')  # Assuming the image is sent as a file in the request data
 
     if not image:
-        return Response({'error': 'Image file not provided'}, status=400)
+        return Response({'error': 'Avatar file not provided'}, status=400)
 
     current_user.avatar = image
     current_user.save()
