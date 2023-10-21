@@ -54,7 +54,7 @@ class DealSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'photos']
+        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
