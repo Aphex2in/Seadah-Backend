@@ -28,9 +28,9 @@ class Deal(models.Model):
     posted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deals')
     title = models.CharField(max_length=124)
     description = models.CharField(max_length=2000)  # You can adjust the max_length as needed.
-    latitude = models.FloatField(null=True)
-    longitude = models.FloatField(null=True)
-    link = models.CharField(max_length=300,null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    link = models.CharField(max_length=300, null=True, blank=True)
     expiry_date = models.DateField()
     tags = models.CharField(max_length=20, blank=True)
     upvotes = models.ManyToManyField(User, related_name='upvoted_deals', blank=True)
