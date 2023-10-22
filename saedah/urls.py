@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from saedah import views
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import register_user, user_login, user_logout, user_profile
 
 urlpatterns = [
@@ -43,3 +45,6 @@ urlpatterns = [
     path('comment/<int:id>', views.comment_removeoredit, name='comment_removeoredit'),
     path('profile/<int:id>/show_comments/', views.show_user_comments, name='show_user_comments')
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
