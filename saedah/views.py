@@ -255,7 +255,8 @@ def upvote_deal(request, id):
     user = request.user
 
     if user in deal.upvotes.all():
-        return Response({'error': 'You have already upvoted this deal.'}, status=400)
+        deal.upvotes.remove(user)
+        return Response({'error': 'You have removed the upvote.'})
 
     deal.upvotes.add(user)
     deal.save()
@@ -269,7 +270,8 @@ def downvote_deal(request, id):
     user = request.user
 
     if user in deal.downvotes.all():
-        return Response({'error': 'You have already downvoted this deal.'}, status=400)
+        deal.downvotes.remove(user)
+        return Response({'error': 'You have removed the downvote.'})
 
     deal.downvotes.add(user)
     deal.save()
