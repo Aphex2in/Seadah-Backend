@@ -52,11 +52,13 @@ class DealSerializer(serializers.ModelSerializer):
     photos = serializers.SerializerMethodField()
     username = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    isFollowed = serializers.SerializerMethodField()
+    isLiked = serializers.SerializerMethodField()
     #comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
+        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'isFollowed', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -75,10 +77,22 @@ class DealSerializer(serializers.ModelSerializer):
     def get_avatar(self, obj):
         avatar_url = obj.posted_by.avatar.url if obj.posted_by.avatar else None
         return avatar_url
-    #def get_comments(self, obj):
-        #comments = Comments.objects.filter(Deal_id=obj.id)
-        #comment_serializer = CommentSerializer(comments, many=True)
-        #return {'comments': comment_serializer.data}
+    
+    def get_isFollowed(self, obj):
+        user = self.context.get('user')
+        if user:
+            is_followed = user.following.filter(id=obj.posted_by.id).exists()
+            return is_followed
+        return False
+
+
+    def get_isLiked(self, obj):
+        # Check if the user who liked the deal is provided in the context
+        user = self.context.get('user')
+        if user:
+            return obj.likes.filter(id=user.id).exists()
+        return False
+    
     
 class LikeSerializer(serializers.ModelSerializer):
     photos = serializers.SerializerMethodField()

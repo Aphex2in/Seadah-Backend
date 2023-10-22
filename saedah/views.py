@@ -57,7 +57,7 @@ def user_list(request):
 def deals_list(request):
     if request.method == 'GET':
         deal = Deal.objects.all()
-        serializer = DealSerializer(deal, many=True)
+        serializer = DealSerializer(deal, many=True, context={'user': request.user})
         return JsonResponse({'deals':serializer.data})
     if request.method == 'POST':
         user = request.user
@@ -121,7 +121,7 @@ def deal_detail(request, id):
             deal.isLiked = True
 
         return Response({
-            'deal': DealSerializer(deal).data,
+            'deal': DealSerializer(deal, context={'user': request.user}).data,
             'comments': serializer.data,
             'total_comments': comments.count(),
             'has_next_page': comments_page.has_next(),
@@ -194,7 +194,7 @@ def profile_deals(request, id):
     
     if request.method == 'GET':
         deals = Deal.objects.filter(posted_by=user)
-        serializer = DealSerializer(deals, many=True)
+        serializer = DealSerializer(deals, many=True, context={'user': request.user})
         return JsonResponse({'user':serializer.data})
     
 #Follow
@@ -377,7 +377,7 @@ def search_deals(request):
         deals_page = paginator.page(paginator.num_pages)
 
     # Serialize the deals for the current page
-    serializer = DealSerializer(deals_page, many=True)
+    serializer = DealSerializer(deals_page, many=True, context={'user': request.user})
 
     return Response({
         'deals': serializer.data,
@@ -414,7 +414,7 @@ def home_deals(request):
     except EmptyPage:
         deals_page = paginator.page(paginator.num_pages)
 
-    serializer = DealSerializer(deals_page, many=True)
+    serializer = DealSerializer(deals_page, many=True, context={'user': request.user})
 
     return Response({
         'deals': serializer.data,
@@ -422,3 +422,15 @@ def home_deals(request):
         'has_next_page': deals_page.has_next(),
         'has_previous_page': deals_page.has_previous(),
     })
+from rest_framework import generics
+from rest_framework import permissions
+class DealListView(generics.ListCreateAPIView):
+    queryset = Deal.objects.all()
+    serializer_class = DealSerializer
+    permission_classes = [permissions.IsAuthenticated]  # Example permissions, adjust as needed
+
+    def get_serializer_context(self):
+        # Pass the request as context to the serializer
+        return {'request': self.request}
+
+    # ... (other view code)
