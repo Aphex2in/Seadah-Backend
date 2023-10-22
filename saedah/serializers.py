@@ -50,11 +50,13 @@ class DealSerializer(serializers.ModelSerializer):
     upvotes = serializers.SerializerMethodField()
     downvotes = serializers.SerializerMethodField()
     photos = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     #comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
+        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -66,6 +68,13 @@ class DealSerializer(serializers.ModelSerializer):
         photos = DealPhotos.objects.filter(deal=obj)
         return [photo.photo.url for photo in photos]
     
+    def get_username(self, obj):
+        user = User.objects.get(pk=obj.posted_by.id)
+        return user.username
+    
+    def get_avatar(self, obj):
+        avatar_url = obj.posted_by.avatar.url if obj.posted_by.avatar else None
+        return avatar_url
     #def get_comments(self, obj):
         #comments = Comments.objects.filter(Deal_id=obj.id)
         #comment_serializer = CommentSerializer(comments, many=True)
@@ -83,10 +92,11 @@ class LikeSerializer(serializers.ModelSerializer):
 
 class UserCustomSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
+    deals = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['fullname', 'username', 'role', 'followers', 'followings', 'avatar', 'comments', 'likes']
+        fields = ['fullname', 'username', 'role', 'followers', 'followings', 'avatar', 'comments', 'deals', 'likes']
 
     followers = serializers.SerializerMethodField()
     followings = serializers.SerializerMethodField()
@@ -101,6 +111,11 @@ class UserCustomSerializer(serializers.ModelSerializer):
         comments = Comments.objects.filter(posted_by=obj)
         comment_serializer = CommentSerializer(comments, many=True)
         return {'comments': comment_serializer.data}
+    
+    def get_deals(self, obj):
+        deals = Deal.objects.filter(posted_by=obj)
+        deal_serializer = DealSerializer(deals, many=True)
+        return {'deals': deal_serializer.data}
     
     def get_likes(self, obj):
         likes = Deal.objects.filter(likes=obj)

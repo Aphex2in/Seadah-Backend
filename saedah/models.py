@@ -37,6 +37,7 @@ class Deal(models.Model):
     downvotes = models.ManyToManyField(User, related_name='downvoted_deals', blank=True)
     likes = models.ManyToManyField(User, related_name='likes', blank=True)
     isLiked = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
 
