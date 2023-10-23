@@ -68,7 +68,7 @@ def deals_list(request):
         photos = request.FILES.getlist('photos')
 
         # Create a new deal instance
-        serializer = DealSerializer(data=data)
+        serializer = DealSerializer(data=data, context={'user': request.user})
 
         if serializer.is_valid():
             # Save the deal object with the user as the creator
@@ -130,7 +130,7 @@ def deal_detail(request, id):
 
     if request.method == 'PUT':
         # Assuming you have a DealSerializer for updating the deal details
-        serializer = DealSerializer(deal, data=request.data)
+        serializer = DealSerializer(deal, data=request.data, context={'user': request.user})
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'Deal details updated successfully'})

@@ -54,11 +54,12 @@ class DealSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     isFollowed = serializers.SerializerMethodField()
     isLiked = serializers.SerializerMethodField()
+    isDeletable = serializers.SerializerMethodField()
     #comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'isFollowed', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
+        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'isFollowed', 'isDeletable', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -91,6 +92,15 @@ class DealSerializer(serializers.ModelSerializer):
         user = self.context.get('user')
         if user:
             return obj.likes.filter(id=user.id).exists()
+        return False
+    
+    def get_isDeletable(self, obj):
+        # Check if the user who liked the deal is provided in the context
+        user = self.context.get('user')
+        if user == obj.posted_by:
+            return True
+        if user.role == User.MD:
+            return True
         return False
     
     
@@ -128,10 +138,10 @@ class UserCustomSerializer(serializers.ModelSerializer):
     
     def get_deals(self, obj):
         deals = Deal.objects.filter(posted_by=obj)
-        deal_serializer = DealSerializer(deals, many=True)
+        deal_serializer = DealSerializer(deals, many=True, context={'user': obj})
         return {'deals': deal_serializer.data}
     
     def get_likes(self, obj):
         likes = Deal.objects.filter(likes=obj)
-        like_serializer = LikeSerializer(likes, many=True)
+        like_serializer = DealSerializer(likes, many=True, context={'user': obj})
         return {'likes': like_serializer.data}
