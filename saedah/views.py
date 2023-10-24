@@ -404,8 +404,10 @@ def home_deals(request):
     if followings:
         # Get deals from users you are following
         deals = Deal.objects.filter(posted_by__in=followings)
+        if not deals:
+            latest_deals = Deal.objects.order_by('-id')
     else:
-        # If no followings or no deals from followings, show the latest deals
+        # If no followings, show the latest deals
         latest_deals = Deal.objects.order_by('-id')
 
     if not followings or not deals:
