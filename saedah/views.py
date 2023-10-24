@@ -363,8 +363,13 @@ def search_deals(request):
     deals_per_page = 5
 
     if keyword:
+        user = User.objects.filter(Q(username__icontains=keyword))
         deals = Deal.objects.filter(
             Q(title__icontains=keyword) | Q(description__icontains=keyword)
+        )
+        if user:
+            deals = Deal.objects.filter(
+            Q(title__icontains=keyword) | Q(description__icontains=keyword)| Q(posted_by__in=user)
         )
     else:
         deals = Deal.objects.all()
