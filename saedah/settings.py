@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 STATIC_ROOT = "static"
 
 AUTH_USER_MODEL = 'saedah.User'
