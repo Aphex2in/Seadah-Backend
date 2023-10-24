@@ -55,11 +55,13 @@ class DealSerializer(serializers.ModelSerializer):
     isFollowed = serializers.SerializerMethodField()
     isLiked = serializers.SerializerMethodField()
     isDeletable = serializers.SerializerMethodField()
+    isUpvoted = serializers.SerializerMethodField()
+    isDownvoted = serializers.SerializerMethodField()
     #comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
-        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'isFollowed', 'isDeletable', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
+        fields = ['id', 'posted_by', 'created_at', 'username', 'avatar', 'title', 'description', 'expiry_date', 'isLiked', 'isFollowed', 'isDeletable', 'isUpvoted', 'isDownvoted', 'tags', 'upvotes', 'downvotes', 'price', 'latitude', 'longitude', 'link', 'photos']
 
     def get_upvotes(self, obj):
         return obj.upvotes.count()
@@ -92,6 +94,20 @@ class DealSerializer(serializers.ModelSerializer):
         user = self.context.get('user')
         if user:
             return obj.likes.filter(id=user.id).exists()
+        return False
+    
+    def get_isUpvoted(self, obj):
+        # Check if the user who liked the deal is provided in the context
+        user = self.context.get('user')
+        if user:
+            return obj.upvotes.filter(id=user.id).exists()
+        return False
+    
+    def get_isDownvoted(self, obj):
+        # Check if the user who liked the deal is provided in the context
+        user = self.context.get('user')
+        if user:
+            return obj.downvotes.filter(id=user.id).exists()
         return False
     
     def get_isDeletable(self, obj):
